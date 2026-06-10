@@ -661,13 +661,19 @@ async function uploadImage(file) {
   if (demoMode) {
     return new Promise(res => {
       const r = new FileReader();
-      r.onload = e => res(e.target.result); // Base64をURLとして保存
+      r.onload = e => res(e.target.result);
       r.readAsDataURL(file);
     });
   }
-  const name = `${Date.now()}_${file.name}`;
+  // ファイル名を「タイムスタンプ.拡張子」だけにする
+  const ext  = file.name.split('.').pop().toLowerCase();
+  const name = `${Date.now()}.${ext}`;
+
   const { error } = await sb.storage.from('item-images').upload(name, file);
-  if (error) return null;
+  if (error) {
+    toast('画像アップロード失敗: ' + error.message);
+    return null;
+  }
   const { data } = sb.storage.from('item-images').getPublicUrl(name);
   return data.publicUrl;
 }
