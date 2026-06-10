@@ -412,6 +412,8 @@
     }
     .btn-success:hover { background: #15803D; }
     .btn-success:disabled { opacity: 0.6; cursor: not-allowed; }
+    .btn-danger { background: #FEE2E2; color: #DC2626; width: 100%; padding: 10px; border-radius: 10px; margin-top: 8px; }
+    .btn-danger:hover { background: #FECACA; }
     .form-actions {
       display: flex;
       gap: 9px;
@@ -596,8 +598,8 @@
 // ================================================================
 //  ⚙️  設定 — Supabase プロジェクトの値に書き換えてください
 // ================================================================
-const SUPABASE_URL     = 'https://rgkjrmtyzcedaaqjbsik.supabase.co';      // 例: https://xxxx.supabase.co
-const SUPABASE_ANON_KEY = 'sb_publishable_3SatsnxRQktkFQX77GUa4Q_AomeRZXV'; // 例: eyJhbGci...
+const SUPABASE_URL     = 'sb_publishable_3SatsnxRQktkFQX77GUa4Q_AomeRZXV';      // 例: https://xxxx.supabase.co
+const SUPABASE_ANON_KEY = 'https://rgkjrmtyzcedaaqjbsik.supabase.co; // 例: eyJhbGci...
 // ================================================================
 
 // ── Supabase 初期化 ──────────────────────────────────────────
@@ -785,6 +787,7 @@ function openDetail(id) {
     ${claimed
       ? `<div class="claimed-notice">✅ この落とし物はすでに受け取られました</div>`
       : `<button class="btn btn-success" id="claimBtn" onclick="handleClaim()">✅ 受取済みにする</button>`}
+    <button class="btn btn-danger" onclick="handleDelete()">🗑 この落とし物を削除する</button>
   `;
   document.getElementById('detailModal').classList.add('open');
 }
@@ -796,6 +799,26 @@ async function handleClaim() {
   if (ok) {
     document.getElementById('detailModal').classList.remove('open');
     toast('✅ 受取済みに更新しました');
+  }
+}
+
+// ── DB: 削除 ──────────────────────────────────────────────────
+async function deleteItem(id) {
+  if (demoMode) {
+    const all = lsGet().filter(i => i.id !== id);
+    lsSet(all); items = all; render(); return true;
+  }
+  const { error } = await sb.from('items').delete().eq('id', id);
+  if (error) { toast('削除に失敗しました'); return false; }
+  await loadItems(); return true;
+}
+
+async function handleDelete() {
+  if (!confirm('この落とし物を削除しますか？この操作は元に戻せません。')) return;
+  const ok = await deleteItem(selectedId);
+  if (ok) {
+    document.getElementById('detailModal').classList.remove('open');
+    toast('🗑 削除しました');
   }
 }
 
